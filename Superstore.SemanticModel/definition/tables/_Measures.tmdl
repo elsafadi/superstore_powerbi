@@ -1,0 +1,211 @@
+table _Measures
+	lineageTag: 213fabc2-d6a9-4708-b45e-57a5bd4c3f5f
+
+	measure 'Total Sales' =
+			
+			SUM ( FactSales[sales] )
+			// Simple aggregation, but always define it as a measure (never use the raw
+			// column directly in a visual) so every other measure can reference it and
+			// stays consistent if the underlying calculation ever changes.
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: b575a1b3-092c-44fb-a677-8c4ed525d322
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'Total Profit' =
+			
+			SUM ( FactSales[profit] )
+		lineageTag: 701b54ce-3a1d-4ce1-9524-ac586832acbf
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total Orders' =
+			
+			DISTINCTCOUNT ( FactSales[order_id] )
+			// Distinct count matters here: one order can have multiple line items
+			// (multiple products), so COUNTROWS would overstate the number of orders.
+		formatString: 0
+		lineageTag: cd8f025c-b05b-4591-9d03-c097118b03f8
+
+	measure 'Total Units Sold' =
+			
+			SUM ( FactSales[order_quantity] )
+		formatString: 0
+		lineageTag: 54cd1b05-10cd-4aa9-9938-83b16e243b70
+
+	measure 'Average Order Value' =
+			
+			DIVIDE ( [Total Sales], [Total Orders] )
+			// Always use DIVIDE() instead of the "/" operator in DAX — it safely
+			// returns BLANK() instead of throwing a divide-by-zero error when a
+			// filter context has no orders.
+		lineageTag: 44e489d5-a224-441e-a74d-c3b7ce4f91ea
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Overall Profit Margin %' =
+			
+			DIVIDE ( [Total Profit], [Total Sales] )
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 43a66202-d48e-41bf-ad7e-27d39f230ed3
+
+	measure 'Sales Prior Year' =
+			
+			CALCULATE ( [Total Sales], SAMEPERIODLASTYEAR ( DimDate[date] ) )
+		lineageTag: 55bdfe80-7743-4c3d-a5ee-b22a871db5ff
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Sales YoY Growth %' =
+			
+			DIVIDE ( [Total Sales] - [Sales Prior Year], [Sales Prior Year] )
+		lineageTag: 0542df59-8572-4292-8238-b803e0f7d994
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Sales Running Total' =
+			
+			CALCULATE (
+			    [Total Sales],
+			    FILTER (
+			        ALLSELECTED ( DimDate[date] ),
+			        DimDate[date] <= MAX ( DimDate[date] )
+			    )
+			)
+			// A running/cumulative total over whatever date range is currently
+			// filtered/selected in the report (e.g. a slicer). Useful for a
+			// cumulative-sales line chart that keeps climbing across the year.
+		lineageTag: 38615168-8123-4d1c-bc32-64b4f86b8d1a
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Sales - Same Month Last Year' =
+			
+			CALCULATE (
+			    [Total Sales],
+			    DATEADD ( DimDate[date], -1, YEAR )
+			)
+		lineageTag: 40755f61-5e7e-48a2-a881-8a70dc2f7e73
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average Discount %' =
+			
+			AVERAGE ( FactSales[discount] )
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 56bf14db-5d04-4f47-a8e7-e523158661dc
+
+	measure 'High Discount Sales' =
+			
+			CALCULATE ( [Total Sales], FactSales[discount] >= 0.2 )
+			// Sales made at 20%+ discount — useful for a card/KPI that flags how much
+			// revenue is coming from heavily discounted orders, a common exec question.
+		lineageTag: 4d6942a4-aab5-4346-84d9-0391ca325299
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Profit per Order' =
+			
+			DIVIDE ( [Total Profit], [Total Orders] )
+		lineageTag: f38026bc-7129-43f1-bb50-5fca6b34a841
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Loss-Making Orders' =
+			
+			CALCULATE (
+			    DISTINCTCOUNT ( FactSales[order_id] ),
+			    FactSales[profit] < 0
+			)
+			// Count of orders that lost money — a strong talking point in your README
+			// ("X% of orders are unprofitable, driven mainly by the Tables sub-category
+			// and Delivery Truck shipping").
+		formatString: 0
+		lineageTag: 3c6e15fd-d375-482b-92d2-2ee5a31fb164
+
+	measure 'Customer Count' =
+			
+			DISTINCTCOUNT ( DimCustomer[customer_key] )
+		formatString: 0
+		lineageTag: 71c0e59d-d033-4515-8fbd-9c37ddc08a9f
+
+	measure 'Champions Count' =
+			
+			CALCULATE (
+			    DISTINCTCOUNT ( DimCustomerRFM[customer_key] ),
+			    DimCustomerRFM[segment] = "Champions"
+			)
+		formatString: 0
+		lineageTag: fd91bd26-ff17-4599-8047-f033272a39c3
+
+	measure 'At-Risk High-Value Customers' =
+			
+			CALCULATE (
+			    DISTINCTCOUNT ( DimCustomerRFM[customer_key] ),
+			    DimCustomerRFM[segment] = "At Risk (High Value)"
+			)
+			// This is the single most "actionable" number in the whole dashboard:
+			// customers who used to spend a lot and haven't ordered recently. Frame
+			// this in your README as "X customers worth retention outreach."
+		formatString: 0
+		lineageTag: 4c7bde16-f63f-421f-9c5b-ab15bd9c5230
+
+	measure 'Average Customer Lifetime Sales' =
+			
+			AVERAGE ( DimCustomerRFM[monetary] )
+		lineageTag: c394c637-c524-46e7-b5ff-63ad942c7665
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'At-Risk Historical Value' =
+			
+			CALCULATE (
+			    SUM ( DimCustomerRFM[monetary] ),
+			    DimCustomerRFM[segment] = "At Risk (High Value)"
+			)
+		lineageTag: 2e21fe20-0c25-4593-bbd3-3f4226ae6901
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'RFM Segment Color' =
+			
+			SWITCH (
+			    SELECTEDVALUE ( dimcustomerrfm[segment] ),
+			    "Champions", "#2A9D8F",            -- Deep Teal Green (High Value)
+			    "Loyal Customers", "#118DFF",      -- Bright Blue (Stable Core)
+			    "New / Promising", "#E9C46A",      -- Warm Yellow (Nurture/Growth)
+			    "Needs Attention", "#E66C37",      -- Orange (Mid-Level Risk)
+			    "At Risk (High Value)", "#D64550", -- Red-Coral (Urgent Retention Risk)
+			    "Lost / Churned", "#7F7F7F",        -- Neutral Gray (Inactive/Churned)
+			    "#A6A6A6"                          -- Fallback Gray for any blanks
+			)
+		lineageTag: eff93a96-05a2-4a3b-bf4e-9db05818cf8c
+
+	column Column
+		isHidden
+		formatString: 0
+		lineageTag: adcbb01e-47a0-41d2-bb84-16d44c01fec4
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Column]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Sales YTD' =
+			
+			TOTALYTD ( [Total Sales], DimDate[date] )
+		lineageTag: 228e25ac-180b-4e16-905d-54b29c5a2c13
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition _Measures = calculated
+		mode: import
+		source = Row("Column", BLANK())
+
+	annotation PBI_Id = 6a340a7b72394a7eb65f2825a1b28b69
+
+	annotation 436ba87b-9c83-4389-a31b-ebd06a36be98 = {"Expression":""}
+

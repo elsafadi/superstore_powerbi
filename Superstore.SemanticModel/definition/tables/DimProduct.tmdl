@@ -1,0 +1,66 @@
+table DimProduct
+	lineageTag: 161c93bd-80f9-4908-91d4-dc8b25a1bc3e
+
+	column product_key
+		dataType: int64
+		formatString: 0
+		lineageTag: 9249f026-d500-4d4c-a8c4-8a81381e1e8e
+		summarizeBy: none
+		sourceColumn: product_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_name
+		dataType: string
+		lineageTag: 3a83ebc4-6b85-49f9-846b-f4f6bb0a3dc9
+		summarizeBy: none
+		sourceColumn: product_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_category
+		dataType: string
+		lineageTag: ec89b14e-6f15-47fc-8f43-b2ff689147a2
+		summarizeBy: none
+		sourceColumn: product_category
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_subcategory
+		dataType: string
+		lineageTag: 86500fc6-3eaa-4c91-a537-d7f01508649a
+		summarizeBy: none
+		sourceColumn: product_subcategory
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_container
+		dataType: string
+		lineageTag: 638d0293-cd8c-414b-ba72-06e6d965cb5a
+		summarizeBy: none
+		sourceColumn: product_container
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_base_margin
+		dataType: double
+		lineageTag: db39b7a1-e55f-4e31-bf03-8ce5f8115207
+		summarizeBy: none
+		sourceColumn: product_base_margin
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition DimProduct = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("C:\Users\amars\OneDrive\Desktop\Share\Superstore project\data\processed\DimProduct.csv"),[Delimiter=",", Columns=6, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"product_key", Int64.Type}, {"product_name", type text}, {"product_category", type text}, {"product_subcategory", type text}, {"product_container", type text}, {"product_base_margin", type number}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

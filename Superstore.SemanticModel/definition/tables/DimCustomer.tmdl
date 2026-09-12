@@ -1,0 +1,40 @@
+table DimCustomer
+	lineageTag: 37169aaa-eca6-416c-a6aa-8d0eb41d5e6f
+
+	column customer_key
+		dataType: int64
+		formatString: 0
+		lineageTag: dea60a2d-944e-4119-8503-e56a9de4b4b5
+		summarizeBy: none
+		sourceColumn: customer_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_name
+		dataType: string
+		lineageTag: 81e99d07-434f-4d18-9ea4-30045e1d8552
+		summarizeBy: none
+		sourceColumn: customer_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_segment
+		dataType: string
+		lineageTag: 5e7cc2a4-188c-4e73-a290-416c31479e0f
+		summarizeBy: none
+		sourceColumn: customer_segment
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DimCustomer = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("C:\Users\amars\OneDrive\Desktop\Share\Superstore project\data\processed\DimCustomer.csv"),[Delimiter=",", Columns=3, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"customer_key", Int64.Type}, {"customer_name", type text}, {"customer_segment", type text}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,40 @@
+table DimRegion
+	lineageTag: ebd109b8-e034-49d9-8216-91f65562018a
+
+	column region_key
+		dataType: int64
+		formatString: 0
+		lineageTag: d601577f-0523-4992-94b2-91537d8e0b5e
+		summarizeBy: none
+		sourceColumn: region_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column province
+		dataType: string
+		lineageTag: 8db44f23-074c-487d-abb0-266ba584bd6b
+		summarizeBy: none
+		sourceColumn: province
+
+		annotation SummarizationSetBy = Automatic
+
+	column region
+		dataType: string
+		lineageTag: 0f05cec3-e531-4b99-a338-553748aa3214
+		summarizeBy: none
+		sourceColumn: region
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DimRegion = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("C:\Users\amars\OneDrive\Desktop\Share\Superstore project\data\processed\DimRegion.csv"),[Delimiter=",", Columns=3, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"region_key", Int64.Type}, {"province", type text}, {"region", type text}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_ResultType = Table
+

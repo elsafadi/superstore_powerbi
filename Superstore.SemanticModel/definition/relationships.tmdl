@@ -1,0 +1,22 @@
+relationship AutoDetected_e28034fa-91dc-42f9-bc27-f62a87e45fc2
+	crossFilteringBehavior: bothDirections
+	fromCardinality: one
+	fromColumn: DimCustomerRFM.customer_key
+	toColumn: DimCustomer.customer_key
+
+relationship AutoDetected_42f5fc2f-9236-4f4b-9627-cb71bc5eb127
+	fromColumn: FactSales.customer_key
+	toColumn: DimCustomer.customer_key
+
+relationship AutoDetected_84fd9a34-a7ed-4008-8457-756ceda27bd6
+	fromColumn: FactSales.product_key
+	toColumn: DimProduct.product_key
+
+relationship AutoDetected_89a91984-6e3a-4755-8fb6-7cff32c54cdb
+	fromColumn: FactSales.region_key
+	toColumn: DimRegion.region_key
+
+relationship dce5ba5a-5408-6a2a-8d9f-5fc6fc98f097
+	fromColumn: FactSales.order_date_key
+	toColumn: DimDate.date_key
+
